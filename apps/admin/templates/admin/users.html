@@ -1,0 +1,182 @@
+{# apps/admin/templates/admin/users.html #}
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <h5 class="mb-1">사용자 관리</h5>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div class="card flex-grow-1 me-md-3 mb-3 mb-md-0">
+            <div class="card-body">
+                <form action="{{ url_for('admin.users') }}" method="GET" class="row g-3 align-items-center">
+                    <div class="col-md-3">
+                        <label for="search" class="visually-hidden">검색</label>
+                        <input type="search" name="search" id="search" class="form-control form-control-sm"
+                            placeholder="이름 또는 이메일" value="{{ search_query or '' }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="user_type" class="visually-hidden">사용자 역할</label>
+                        <select class="form-select form-select-sm" name="user_type" id="user_type">
+                            <option value="">모든 역할</option>
+                            {% for type in UserType %}
+                            <option value="{{ type.value }}" {% if user_type_query==type.value %}selected{% endif %}>
+                                {{ type.name.title() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="is_active" class="visually-hidden">활성 상태</label>
+                        <select name="is_active" id="is_active" class="form-select form-select-sm">
+                            <option value="">모든 상태</option>
+                            <option value="true" {% if is_active_query=='true' %}selected{% endif %}>활성</option>
+                            <option value="false" {% if is_active_query=='false' %}selected{% endif %}>비활성</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="created_at" class="visually-hidden">가입일</label>
+                        <input type="date" name="created_at" id="created_at" class="form-control form-control-sm"
+                            value="{{ created_at_query or '' }}">
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <button class="btn btn-primary btn-sm" type="submit">검색</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="d-flex justify-content-end flex-shrink-0">
+            <a href="{{ url_for('admin.create_user') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> 새 사용자 생성
+            </a>
+        </div>
+    </div>
+    {% if users %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>이름</th>
+                    <th>이메일</th>
+                    <th>역할</th>
+                    <th>상태</th>
+                    <th>가입일</th>
+                    <th style="width: 20%;">역할 변경</th>
+                    <th class="text-center">활성</th>
+                    <th class="text-center">수정</th>
+                    <th class="text-center">삭제</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                        {% if user.user_type.value == 'admin' %}
+                        <span class="badge bg-danger">Admin</span>
+                        {% elif user.user_type.value == 'expert' %}
+                        <span class="badge bg-info">Expert</span>
+                        {% else %}
+                        <span class="badge bg-secondary">User</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.is_active %}
+                        <span class="badge bg-success">활성</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">비활성</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+
+
+                    <td>
+                        {% if user.id != current_user.id %}
+                        <form action="{{ url_for('admin.user_type_change', user_id=user.id, **request.args) }}"
+                            method="POST" class="d-flex">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <select class="form-select form-select-sm me-2" name="user_type">
+            {% for type in UserType %}
+                {% if type != user.user_type %}
+                    <option value="{{ type.value }}">{{ type.name.title() }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+                            <button type="submit" class="btn btn-sm btn-outline-primary flex-shrink-0">변경</button>
+                        </form>
+                        {% else %}
+                        <small class="text-muted">변경 불가</small>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center">
+                        {% if user.id != current_user.id %}
+                        <form method="POST" action="{{ url_for('admin.toggle_user_active', user_id=user.id, **request.args) }}"
+                            class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit"
+                                class="btn btn-sm w-100 {% if user.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
+                                {{ "비활성" if user.is_active else "활성" }}
+                            </button>
+                        </form>
+                        {% else %}
+                        <small class="text-muted">자기 계정</small>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if user.id != current_user.id %}
+                        <a href="{{ url_for('admin.edit_user', user_id=user.id) }}"
+                            class="btn btn-sm btn-outline-info w-100">수정</a>
+                        {% else %}
+                        <small class="text-muted">자기 계정</small>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if user.id != current_user.id %}
+                        <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id, **request.args) }}"
+                            class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100"
+                                onclick="return confirm('정말로 {{ user.username }} 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.');">
+                                삭제
+                            </button>
+                        </form>
+                        {% else %}
+                        <small class="text-muted">자기 계정</small>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if pagination and pagination.pages > 1 %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                <a class="page-link"
+                    href="{{ url_for('admin.users', page=pagination.prev_num, **filtered_args) if pagination.has_prev else '#' }}">&laquo;</a>
+            </li>
+            {% for p in pagination.iter_pages() %}
+            {% if p %}
+            <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('admin.users', page=p, **filtered_args) }}">{{ p }}</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+            {% endfor %}
+            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                <a class="page-link"
+                    href="{{ url_for('admin.users', page=pagination.next_num, **filtered_args) if pagination.has_next else '#' }}">&raquo;</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="alert alert-info text-center" role="alert">
+        조건에 맞는 사용자가 없습니다.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,461 @@
+{# apps/dashboard/templates/dashboard/index.html #}
+{% extends 'dashboard_base.html' %}
+
+{% block title %}MLOps Dashboard{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar shadow-sm">
+    <h5 class="mb-3 text-dark">모델 목록</h5>
+    <div class="list-group">
+        <a href="#model-v1" class="list-group-item list-group-item-action active">
+            Iris Classifier v1.2 <span class="badge badge-success float-right">배포</span>
+        </a>
+        <a href="#model-v2" class="list-group-item list-group-item-action">
+            Iris Classifier v2.0 <span class="badge badge-warning float-right">준비</span>
+        </a>
+        <a href="#model-legacy" class="list-group-item list-group-item-action">
+            Legacy Model <span class="badge badge-danger float-right">폐기</span>
+        </a>
+        <a href="#" class="list-group-item list-group-item-action text-primary">
+            + 새 모델 등록
+        </a>
+    </div>
+
+    <hr>
+    <h6 class="mt-4 text-secondary">주요 기능</h6>
+    <ul class="list-unstyled">
+        <li><a href="#" class="text-dark">실험 관리</a></li>
+        <li><a href="#" class="text-dark">데이터 관리</a></li>
+        <li><a href="#" class="text-dark">알림 설정</a></li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">선택된 모델 상세 정보 및 관리: Iris Classifier v1.2</h1>
+
+<div class="card shadow-sm">
+    <div class="card-header p-0">
+        <ul class="nav nav-tabs" id="modelTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="overview-tab" data-toggle="tab" href="#overview" role="tab">개요</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="performance-tab" data-toggle="tab" href="#performance" role="tab">성능</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="data-tab" data-toggle="tab" href="#data" role="tab">데이터</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="deployment-tab" data-toggle="tab" href="#deployment" role="tab">배포</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="log-tab" data-toggle="tab" href="#log" role="tab">로그</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="settings-tab" data-toggle="tab" href="#settings" role="tab">설정</a>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content" id="modelTabContent">
+            
+            <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary">모델 기본 정보</h5>
+                                <p><strong>버전:</strong> v1.2</p>
+                                <p><strong>배포 상태:</strong> <span class="badge badge-success">Active</span></p>
+                                <p><strong>학습일:</strong> 2025-09-28</p>
+                                <p><strong>최종 업데이트:</strong> 2025-09-29</p>
+                                <p><strong>알고리즘:</strong> Scikit-learn Logistic Regression</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">예측 결과 모니터링 (시간 추이)</h5>
+                                <canvas id="predictionMonitorChart" style="max-height: 300px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">리소스 사용량 (더미)</h5>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <h6 class="mb-0">CPU 사용량</h6>
+                                        <div class="progress" style="height: 20px;">
+                                            <div id="cpu_usage_bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <h6 class="mb-0">메모리 사용량</h6>
+                                        <div class="progress" style="height: 20px;">
+                                            <div id="mem_usage_bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="performance" role="tabpanel" aria-labelledby="performance-tab">
+                <div class="row">
+                    <div class="col-lg-3 col-md-4">
+                        <div id="performance_metrics" class="p-2 border rounded bg-light mb-3">
+                            <h6 class="text-info">주요 지표</h6>
+                            <p><strong>Accuracy:</strong> <span id="accuracy_metric">...</span></p>
+                            <p><strong>F1 Score:</strong> <span id="f1_score_metric">...</span></p>
+                            <p><strong>Macro-AUC:</strong> <span id="macro_auc_metric">...</span></p>
+                            <p><strong>Micro-AUC:</strong> <span id="micro_auc_metric">...</span></p>
+                        </div>
+                        <div id="anomaly_alerts" class="list-group">
+                            <h6 class="text-danger">이상 감지 알림</h6>
+                            <div class="alert alert-info py-1" role="alert">
+                                이상 감지 데이터를 불러오는 중...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-9 col-md-8">
+                        <ul class="nav nav-pills mb-3" id="perfSubTab" role="tablist">
+                            <li class="nav-item"><a class="nav-link active" id="roc-tab" data-toggle="tab" href="#roc" role="tab">ROC Curve</a></li>
+                            <li class="nav-item"><a class="nav-link" id="cm-tab" data-toggle="tab" href="#cm" role="tab">Confusion Matrix</a></li>
+                            <li class="nav-item"><a class="nav-link" id="pr-tab" data-toggle="tab" href="#pr" role="tab">PR Curve</a></li>
+                        </ul>
+                        <div class="tab-content" id="perfSubTabContent">
+                            <div class="tab-pane fade show active" id="roc" role="tabpanel"><canvas id="rocChart" class="mt-3" style="max-height: 400px;"></canvas></div>
+                            <div class="tab-pane fade" id="cm" role="tabpanel"><div id="confusion_matrix_container" class="mt-3"></div></div>
+                            <div class="tab-pane fade" id="pr" role="tabpanel"><canvas id="prChart" class="mt-3" style="max-height: 400px;"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="data" role="tabpanel" aria-labelledby="data-tab">
+                <h5 class="card-title text-warning">데이터 드리프트 감지</h5>
+                <div id="drift_status" class="mb-3"></div>
+                <div id="drift_chart_container" class="row row-cols-1 row-cols-md-2 row-cols-lg-2 g-4">
+                    </div>
+            </div>
+
+            <div class="tab-pane fade" id="deployment" role="tabpanel" aria-labelledby="deployment-tab">
+                <h5 class="card-title text-success">모델 재학습 & 배포 관리</h5>
+                <p>모델 성능 저하 및 신규 데이터 유입 시 재학습/배포/롤백을 직접 트리거합니다.</p>
+                <form action="{{ url_for('dashboard.trigger_retrain') }}" method="post" class="d-inline mr-2">
+                    <button type="submit" class="btn btn-warning btn-lg">모델 재학습</button>
+                </form>
+                <form action="{{ url_for('dashboard.deploy_model') }}" method="post" class="d-inline mr-2">
+                    <button type="submit" class="btn btn-primary btn-lg">모델 배포</button>
+                </form>
+                <form action="{{ url_for('dashboard.rollback_model') }}" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger btn-lg">모델 롤백</button>
+                </form>
+                <hr>
+                <h6>배포 히스토리 (더미)</h6>
+                <ul class="list-group">
+                    <li class="list-group-item list-group-item-success">v1.2 배포 완료 (2025-09-29 10:30)</li>
+                    <li class="list-group-item list-group-item-info">v1.1 롤백 (2025-09-25 15:45)</li>
+                    <li class="list-group-item">v1.1 배포 완료 (2025-09-25 10:00)</li>
+                </ul>
+            </div>
+
+            <div class="tab-pane fade" id="log" role="tabpanel" aria-labelledby="log-tab">
+                <h5 class="card-title text-secondary">운영 로그</h5>
+                <pre class="bg-dark text-white p-3 rounded" style="max-height: 400px; overflow-y: scroll;">
+[2025-09-29 17:00:01] INFO: Prediction request processed successfully. (200 OK)
+[2025-09-29 16:55:34] WARNING: Data drift detected in 'sepal_length'. p-value: 0.045
+[2025-09-29 16:50:11] ERROR: Database connection failed during logging. Retrying...
+[2025-09-29 10:30:00] DEPLOY: Model v1.2 deployed to production endpoint.
+[2025-09-28 23:59:59] TRAIN: Retraining job finished. New model v1.2 saved. Accuracy: 0.98
+                </pre>
+            </div>
+
+             <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                <h5 class="card-title text-secondary">모델 설정</h5>
+                <form>
+                    <div class="form-group">
+                        <label for="threshold">분류 임계값</label>
+                        <input type="number" step="0.01" class="form-control" id="threshold" value="0.5" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="drift_alpha">드리프트 감지 유의 수준 (Alpha)</label>
+                        <input type="number" step="0.001" class="form-control" id="drift_alpha" value="0.05" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">설정 저장</button>
+                </form>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 클래스 이름에 따른 색상 매핑 함수
+        function get_color_by_class(className) {
+            const colors = {
+                'setosa': 'rgb(255, 99, 132)',
+                'versicolor': 'rgb(54, 162, 235)',
+                'virginica': 'rgb(75, 192, 192)',
+            };
+            return colors[className] || 'rgb(128, 128, 128)';
+        }
+
+        // 모든 데이터 로딩 함수들
+        
+        // --- 1. AI 모델 성능 시각화 (Performance 탭) ---
+        async function fetchPerformanceData() {
+            try {
+                const response = await fetch("{{ url_for('dashboard.model_performance') }}");
+                const data = await response.json();
+                
+                // 지표 업데이트
+                document.getElementById('accuracy_metric').innerText = data.metrics.accuracy;
+                document.getElementById('f1_score_metric').innerText = data.metrics.f1_score;
+                document.getElementById('macro_auc_metric').innerText = data.metrics.auc_roc_macro.toFixed(4);
+                document.getElementById('micro_auc_metric').innerText = data.metrics.auc_roc_micro.toFixed(4);
+                
+                // ROC Curve
+                const rocCtx = document.getElementById('rocChart').getContext('2d');
+                const rocDatasets = [];
+                for (const className in data.roc_data.fpr) {
+                    const color = get_color_by_class(className);
+                    rocDatasets.push({
+                        label: `ROC (${className}) AUC: ${data.roc_data.auc[className].toFixed(2)}`,
+                        data: data.roc_data.tpr[className].map((tpr, i) => ({x: data.roc_data.fpr[className][i], y: tpr})),
+                        borderColor: color,
+                        backgroundColor: color,
+                        borderWidth: 2,
+                        fill: false
+                    });
+                }
+                // 기존 차트가 있다면 파괴 후 재생성 (탭 전환 시 재시각화 오류 방지)
+                if (window.rocChartInstance) window.rocChartInstance.destroy();
+                window.rocChartInstance = new Chart(rocCtx, {
+                    type: 'line',
+                    data: { datasets: rocDatasets },
+                    options: { responsive: true, aspectRatio: 1, scales: { x: { type: 'linear', position: 'bottom', title: { display: true, text: 'False Positive Rate' } }, y: { title: { display: true, text: 'True Positive Rate' } } } }
+                });
+
+                // PR Curve
+                const prCtx = document.getElementById('prChart').getContext('2d');
+                const prDatasets = [];
+                for (const className in data.pr_data.precision) {
+                    const color = get_color_by_class(className);
+                    prDatasets.push({
+                        label: `PR (${className}) AUC: ${data.pr_data.auc[className].toFixed(2)}`,
+                        data: data.pr_data.precision[className].map((precision, i) => ({x: data.pr_data.recall[className][i], y: precision})),
+                        borderColor: color,
+                        backgroundColor: color,
+                        borderWidth: 2,
+                        fill: false
+                    });
+                }
+                if (window.prChartInstance) window.prChartInstance.destroy();
+                window.prChartInstance = new Chart(prCtx, {
+                    type: 'line',
+                    data: { datasets: prDatasets },
+                    options: { responsive: true, aspectRatio: 1, scales: { x: { type: 'linear', position: 'bottom', title: { display: true, text: 'Recall' } }, y: { title: { display: true, text: 'Precision' } } } }
+                });
+
+                // 혼동 행렬 테이블 생성
+                const cmData = data.confusion_matrix;
+                if (cmData && cmData.matrix.length > 0) {
+                    const cmContainer = document.getElementById('confusion_matrix_container');
+                    cmContainer.innerHTML = '';
+                    const table = document.createElement('table');
+                    table.className = 'table table-bordered text-center';
+                    
+                    const thead = table.createTHead();
+                    const headerRow = thead.insertRow();
+                    headerRow.innerHTML = '<th></th>'; 
+                    cmData.labels.forEach(label => {
+                        const th = document.createElement('th');
+                        th.innerText = `예측: ${label}`;
+                        headerRow.appendChild(th);
+                    });
+                    
+                    const tbody = table.createTBody();
+                    cmData.matrix.forEach((row, i) => {
+                        const tr = tbody.insertRow();
+                        const rowHeader = document.createElement('th');
+                        rowHeader.innerText = `실제: ${cmData.labels[i]}`;
+                        tr.appendChild(rowHeader);
+                        row.forEach((cell, j) => {
+                            const td = document.createElement('td');
+                            td.innerText = cell;
+                            td.classList.add(i === j ? 'table-success' : 'table-danger');
+                            tr.appendChild(td);
+                        });
+                    });
+                    cmContainer.appendChild(table);
+                }
+
+            } catch (error) {
+                console.error("Error fetching performance data:", error);
+                document.getElementById('performance_metrics').innerHTML = `<p class="text-danger">모델 성능 데이터를 불러오지 못했습니다.</p>`;
+            }
+        }
+
+        // --- 2. 데이터 드리프트 시각화 (Data 탭) ---
+        async function fetchDataDriftData() {
+            try {
+                const response = await fetch("{{ url_for('dashboard.data_drift') }}");
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                
+                const driftStatus = document.getElementById('drift_status');
+                const driftChartContainer = document.getElementById('drift_chart_container');
+                driftChartContainer.innerHTML = '';
+                driftStatus.innerHTML = '';
+                
+                let allFine = true;
+                
+                if (Object.keys(data.drift_results).length === 0) {
+                     driftStatus.innerHTML = `<div class="alert alert-info py-1"><strong>데이터가 부족하여 드리프트를 감지할 수 없습니다.</strong></div>`;
+                     return;
+                }
+
+                for (const feature in data.drift_results) {
+                    const result = data.drift_results[feature];
+                    const isDriftDetected = result.drift_detected === 1; 
+                    
+                    const alertClass = isDriftDetected ? 'alert-danger' : 'alert-success';
+                    const message = `<strong>${feature}:</strong> ${result.message} (p-value: ${result.p_value})`;
+                    driftStatus.innerHTML += `<div class="alert ${alertClass} py-1">${message}</div>`;
+                    
+                    if (isDriftDetected) allFine = false;
+                }
+                
+                if (allFine && Object.keys(data.drift_results).length > 0) {
+                     const allFineMessage = `<div class="alert alert-success py-1"><strong>모든 특성에서 데이터 드리프트가 감지되지 않았습니다.</strong></div>`;
+                     driftStatus.innerHTML = allFineMessage + driftStatus.innerHTML;
+                }
+
+                const features = Object.keys(data.drift_data);
+                if (features.length > 0) {
+                    features.forEach(feature => {
+                        const colDiv = document.createElement('div');
+                        colDiv.className = 'col'; 
+                        const plotDiv = document.createElement('div');
+                        plotDiv.id = `drift_chart_${feature}`;
+                        plotDiv.style.height = '400px'; 
+                        plotDiv.className = 'bg-white rounded shadow p-2'; 
+                        colDiv.appendChild(plotDiv);
+                        driftChartContainer.appendChild(colDiv);
+
+                        const traceRef = { x: data.drift_data[feature].reference, name: '기준 데이터 (과거 30일)', type: 'histogram', opacity: 0.6, marker: { color: 'rgba(54, 162, 235, 1)' } };
+                        const traceCurr = { x: data.drift_data[feature].current, name: '최근 데이터 (최근 7일)', type: 'histogram', opacity: 0.6, marker: { color: 'rgba(255, 99, 132, 1)' } };
+
+                        const layout = { barmode: 'overlay', title: `<b>${feature}</b> 분포 비교`, xaxis: { title: feature, automargin: true }, yaxis: { title: '빈도', automargin: true }, margin: { t: 30, r: 10, b: 70, l: 30 }, responsive: true };
+                        Plotly.newPlot(plotDiv.id, [traceRef, traceCurr], layout);
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching drift data:", error);
+                document.getElementById('drift_status').innerHTML = `<div class="alert alert-danger">데이터 드리프트 데이터를 불러오지 못했습니다. 서버 오류: ${error.message}</div>`;
+            }
+        }
+        
+        // --- 3. 예측 결과 모니터링 시각화 (Overview 탭) ---
+        async function fetchPredictionMonitorData() {
+            try {
+                const response = await fetch("{{ url_for('dashboard.prediction_monitor') }}");
+                const data = await response.json();
+                
+                const ctx = document.getElementById('predictionMonitorChart').getContext('2d');
+                if (window.predictionMonitorChartInstance) window.predictionMonitorChartInstance.destroy();
+                window.predictionMonitorChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: data.data,
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'top' }, title: { display: true, text: '시간에 따른 예측 결과 분포' } },
+                        scales: { x: { type: 'category' }, y: { stacked: true, title: { display: true, text: '예측 건수' } } }
+                    }
+                });
+            } catch (error) {
+                console.error("Error fetching prediction monitor data:", error);
+                const container = document.getElementById('predictionMonitorChart').parentElement;
+                container.innerHTML = `<div class="alert alert-danger">예측 모니터링 데이터를 불러오지 못했습니다.</div>`;
+            }
+        }
+
+        // --- 4. 이상 감지 및 알림 (Performance 탭) ---
+        async function fetchAnomalyData() {
+            try {
+                const response = await fetch("{{ url_for('dashboard.anomaly_detection') }}");
+                const data = await response.json();
+                
+                const alertsContainer = document.getElementById('anomaly_alerts');
+                alertsContainer.innerHTML = '';
+                
+                if (data.anomalies.length > 0) {
+                    data.anomalies.forEach(anomaly => {
+                        const alert = document.createElement('div');
+                        alert.className = 'alert alert-danger py-2 mb-1';
+                        alert.innerHTML = `<strong>이상 감지!</strong> ID: #${anomaly.id} (${anomaly.predicted_class})`;
+                        alertsContainer.appendChild(alert);
+                    });
+                } else {
+                    alertsContainer.innerHTML = `<div class="alert alert-success py-1">이상 데이터 없음.</div>`;
+                }
+            } catch (error) {
+                console.error("Error fetching anomaly data:", error);
+                document.getElementById('anomaly_alerts').innerHTML = `<div class="alert alert-warning py-1">이상 감지 데이터를 불러오지 못했습니다.</div>`;
+            }
+        }
+
+        // --- 5. 리소스 사용량 (더미) (Overview 탭) ---
+        function updateResourceUsage() {
+            const cpuUsage = Math.floor(Math.random() * 50) + 30; // 30-80%
+            const memUsage = Math.floor(Math.random() * 40) + 50; // 50-90%
+            
+            const cpuBar = document.getElementById('cpu_usage_bar');
+            cpuBar.style.width = cpuUsage + '%';
+            cpuBar.innerText = cpuUsage + '%';
+            
+            const memBar = document.getElementById('mem_usage_bar');
+            memBar.style.width = memUsage + '%';
+            memBar.innerText = memUsage + '%';
+        }
+
+        // 초기 데이터 로딩 및 주기적 업데이트
+        // 참고: 탭 전환 시 차트가 재렌더링되지 않는 문제를 방지하기 위해, 탭 전환 이벤트를 이용해 해당 탭의 데이터만 로드 및 시각화하는 것이 이상적입니다.
+        
+        // 초기 로딩 (Overview 탭의 데이터만 로드)
+        fetchPredictionMonitorData();
+        updateResourceUsage();
+
+        // 탭 이벤트 리스너를 추가하여 탭을 클릭할 때 해당 탭의 데이터만 로드하도록 설정합니다.
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            const target = $(e.target).attr("href"); // 활성화된 탭
+            
+            if (target === '#performance') {
+                fetchPerformanceData();
+                fetchAnomalyData();
+            } else if (target === '#data') {
+                fetchDataDriftData();
+            } else if (target === '#overview') {
+                fetchPredictionMonitorData();
+                updateResourceUsage();
+            }
+        });
+        
+        // 리소스 사용량은 주기적으로 업데이트
+        setInterval(updateResourceUsage, 5000);
+    });
+</script>
+{% endblock %}

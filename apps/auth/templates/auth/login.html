@@ -1,0 +1,41 @@
+<!-- apps/auth/templates/auth/login.html -->
+{% extends "base.html" %}{% block title %}로그인{% endblock %}{% block content %}
+<div class="container py-5"> {# Use Bootstrap's container for responsive width and add vertical padding #}
+  <div class="row justify-content-center"> {# Center the card horizontally #}
+    <div class="col-md-6 col-lg-5"> {# Adjust column width for different screen sizes #}
+      <div class="card dt-auth-login shadow-sm"> {# Add a subtle shadow to the card #}
+        <header class="card-header text-center"> {# Center the header text #}
+          <h2 class="mb-0">로그인</h2> {# Use a heading tag for better semantics and adjust margin #}
+        </header>
+        <section class="card-body"> {# Use card-body for standard card content padding #}
+          <form action="{{ url_for('auth.login') }}" method="POST" novalidate="novalidate">
+            {% for message in get_flashed_messages() %}
+            <div class="alert alert-danger" role="alert"> {# Use Bootstrap alerts for flash messages #}
+              {{ message }}
+            </div>
+            {% endfor %}
+            {{ form.csrf_token }}
+            <div class="mb-3">
+              {{ form.email(class="form-control", placeholder="이메일") }}
+              {% if form.email.errors %}
+                {% for error in form.email.errors %}
+                  <div class="text-danger mt-1">{{ error }}</div> {# Add top margin for spacing #}
+                {% endfor %}
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              {{ form.password(class="form-control", placeholder="비밀번호") }}
+              {% if form.password.errors %}
+                {% for error in form.password.errors %}
+                  <div class="text-danger mt-1">{{ error }}</div>
+                {% endfor %}
+              {% endif %}
+            </div>
+            <div class="mb-3 form-check">
+              {{ form.remember(class="form-check-input") }}
+              {{ form.remember.label(class="form-check-label") }}
+            </div>
+            <div class="d-grid gap-2"> {# Use d-grid and gap-2 for button spacing #}
+              {{ form.submit(class="btn btn-primary btn-lg") }} {# Make the button larger #}
+            </div>
+          </form></section></div></div>  </div></div>{% endblock %}

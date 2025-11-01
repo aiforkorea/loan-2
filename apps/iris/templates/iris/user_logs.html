@@ -1,0 +1,124 @@
+{# apps/iris/templates/iris/user_logs.html #}
+{% extends 'iris_base.html' %}
+{% from "_macros.html" import render_pagination %}
+{% block title %}AI 로그 목록{% endblock %}
+{% block iris_content %}
+<div class="container-fluid">
+    {# <h5 class="mb-1">AI 로그 검색</h5> #}
+    <!-- flex로 한 줄 배치, gap 최소화 -->
+    <div class="d-flex align-items-center mb-4 flex-nowrap" style="gap:0;">
+        <!-- 검색 폼: 너비 최대, 입력칸 꽉 채우기 -->
+        <div class="flex-grow-1 me-2">
+            <div class="card mb-0">
+                <div class="card-body p-2">
+                    <form method="GET" action="{{ url_for('iris.logs') }}" class="row gx-1 gy-1 align-items-center">
+                        {{ form.hidden_tag() }}
+                        <div class="col">
+                            {{ form.keyword.label(class="visually-hidden") }}
+                            {{ form.keyword(class="form-control form-control-sm w-100", type="search", placeholder="사용자 ID, 서비스 ID, 추론 ID 등") }}
+                        </div>
+                        <div class="col">
+                            {{ form.usage_type.label(class="visually-hidden") }}
+                            {{ form.usage_type(class="form-select form-select-sm w-100") }}
+                        </div>
+                        <div class="col">
+                            {{ form.log_status.label(class="visually-hidden") }}
+                            {{ form.log_status(class="form-select form-select-sm w-100") }}
+                        </div>
+                        <div class="col">
+                            {{ form.date_field.label(class="visually-hidden") }}
+                            {{ form.date_field(class="form-select form-select-sm w-100") }}
+                        </div>
+                        <div class="col">
+                            {{ form.start_date.label(class="visually-hidden") }}
+                            {{ form.start_date(class="form-control form-control-sm w-100", type="date") }}
+                        </div>
+                        <div class="col-auto d-flex align-items-center px-0">
+                            <span class="form-label mb-0">~</span>
+                        </div>
+                        <div class="col">
+                            {{ form.end_date.label(class="visually-hidden") }}
+                            {{ form.end_date(class="form-control form-control-sm w-100", type="date") }}
+                        </div>
+                        <div class="col-auto d-grid">
+                            {{ form.submit(class="btn btn-primary btn-sm") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- 다운로드 버튼: 검색 폼과 딱 붙음 -->
+        <div>
+            <a href="{{ url_for('iris.logs_download_csv') }}?{{ request.query_string.decode('utf-8') }}" class="btn btn-success btn-sm">
+                <i class="fas fa-download"></i> 다운로드 </a>
+        </div>
+    </div>
+    {% if logs %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>사용자ID</th>
+                    <th>서비스ID</th>
+                    <th>추론ID</th>
+                    <th>로그타입</th>
+                    <th>로그상태</th>
+                    <th>엔드포인트</th>
+                    <th>추론시각</th>
+                    <th>로그시각</th>
+                    <th>원격주소</th>
+                    <th>응답상태</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.id }}</td>
+                    {# <td>{{ log.user_id }}</td> #}
+                    <td>{{ log.user.username }}({{ log.user_id }})</td>
+                    <td>{{ log.service_id }}</td>
+                    <td>{{ log.prediction_result_id if log.prediction_result_id else '-' }}</td>
+                    <td><span class="badge bg-primary">{{ log.usage_type.value }}</span></td>
+                    <td>{{ log.log_status if log.log_status else '-' }}</td>
+                    <td>{{ log.endpoint }}</td>
+                    <td>{{ log.inference_timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.inference_timestamp else '-' }}</td>
+                    <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ log.remote_addr }}</td>
+                    <td>{{ log.response_status_code if log.response_status_code else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>사용자ID</th>
+                    <th>서비스ID</th>
+                    <th>추론ID</th>
+                    <th>로그타입</th>
+                    <th>로그상태</th>
+                    <th>엔드포인트</th>
+                    <th>추론시각</th>
+                    <th>로그시각</th>
+                    <th>원격주소</th>
+                    <th>응답상태</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="11" class="text-center">해당하는 로그가 없습니다.</td></tr>
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    {% if pagination and pagination.pages > 1 %}
+    <div class="card-footer">
+        {{ render_pagination(pagination, 'iris.logs', filtered_args, 'page') }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

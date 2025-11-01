@@ -1,0 +1,10 @@
+# apps/loan/__init__.py
+from flask import Blueprint
+
+loan = Blueprint('loan', __name__, template_folder='templates')
+# loan 블루프린트 생성, static 폴더는 apps/static/loan에 위치함
+# loan 블루프린트 생성, templates 폴더는 apps/templates/loan에 위치함
+
+from . import views  # views.py import해서 라우팅 등록
+#from . import errors  # errors.py import해서 에러 핸들러 등록
+#from . import forms  # forms.py import해서 폼 등록

@@ -1,0 +1,77 @@
+<!-- apps/templates/base.html  bootstrap CDN-->
+<!doctype  html><html lang="ko"><head><meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>서비스 - {% block title %}{% endblock %}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+<link rel="stylesheet" href={{ url_for('static', filename = 'css/style.css')}}/> 
+{% block head %}{% endblock %} {# 추가적인 head 요소 (CSS, JS)를 위한 블록 #}
+</head>
+<body>
+<!-- 내비게이션 바를 작성한다 -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('main.index') }}">서비스</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+{#                   <a class="nav-link" href="{{ url_for('main.services') }}">서비스</a>     #}
+                </li>
+                {% if current_user.is_authenticated %} {# 로그인된 사용자에게만 보이는 메뉴 #}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('mypage.dashboard') }}">마이페이지</a>  
+                    </li>
+                    {% if current_user.user_type==UserType.ADMIN %} {# 관리자에게만 보이는 메뉴 #}
+                        <li class="nav-item">
+{#                         <a class="nav-link" href="{{ url_for('admin.dashboard') }}">관리자</a>   #}
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin.dashboard') }}">대시보드</a></li>   
+                    {% endif %}
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav">
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.logout') }}">로그아웃 ({{ current_user.username }})</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">로그인</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.signup') }}">회원가입</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+<main role="main" class="container mt-4">   {# 플래시 메시지 표시 영역 #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="row">
+                <div class="col-md-12">
+                    {% for category, message in messages %}
+                       <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %} {# 페이지별 내용이 삽입될 블록 #}
+</main>
+<footer class="footer mt-auto py-3 bg-light">
+    <div class="container text-center">
+{#        <span class="text-muted">&copy; {{ datetime.now().year }} AI 서비스 플랫폼. 모든 권리 보유.</span>  #}
+    </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>   {# 복사 자바스크립트 실행용 #}
+{% block scripts %}{% endblock %} {# 추가적인 script (JS)를 위한 블록 #}
+</body></html>

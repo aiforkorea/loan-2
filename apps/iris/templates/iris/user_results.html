@@ -1,0 +1,157 @@
+{# apps/iris/templates/iris/user_results.html #}
+{% extends 'iris_base.html' %}
+{% from "_macros.html" import render_pagination %}
+{% block title %}AI 추론 결과 목록{% endblock %}
+{% block iris_content %}
+<div class="container-fluid">
+    {# <h5 class="mb-1">AI 추론 결과 검색</h5> #}
+    <div class="d-flex align-items-center mb-4 flex-nowrap" style="gap:0;">
+        <div class="flex-grow-1 me-2">
+            <div class="card mb-0">
+                <div class="card-body p-2">
+                    <form method="GET" action="{{ url_for('iris.results') }}" class="row gx-1 gy-1 align-items-center">
+                        <div class="col">
+                            <input type="search" name="search" class="form-control form-control-sm w-100"
+                                placeholder="예측, 확인 품종, ID 검색" value="{{ search_query or '' }}">
+                        </div>
+                        <div class="col">
+                            <select name="confirm" class="form-select form-select-sm w-100">
+                                <option value="">확인상태</option>
+                                <option value="true" {% if confirm_query == 'true' %}selected{% endif %}>확인완료</option>
+                                <option value="false" {% if confirm_query == 'false' %}selected{% endif %}>미확인</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <select name="date_filter_type" class="form-select form-select-sm w-100">
+                                <option value="" {% if not date_filter_type %}selected{% endif %}>기준일자</option>
+                                <option value="created_at" {% if date_filter_type == 'created_at' %}selected{% endif %}>추론일자</option>
+                                <option value="confirmed_at" {% if date_filter_type == 'confirmed_at' %}selected{% endif %}>확인일자</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <input type="date" name="start_date" class="form-control form-control-sm w-100" value="{{ start_date or '' }}">
+                        </div>
+                        <div class="col-auto d-flex align-items-center px-0">
+                            <span class="form-label mb-0">~</span>
+                        </div>
+                        <div class="col">
+                            <input type="date" name="end_date" class="form-control form-control-sm w-100" value="{{ end_date or '' }}">
+                        </div>
+                        <div class="col-auto d-grid">
+                            <button class="btn btn-primary btn-sm" type="submit">검색</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('iris.results_download_csv') }}?{{ request.query_string.decode('utf-8') }}" class="btn btn-success btn-sm">
+                <i class="fas fa-download"></i> 다운로드
+            </a>
+        </div>
+    </div>
+    {% if pagination.items %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>사용자ID</th>
+                        <th>꽃받침길이</th>
+                        <th>꽃받침너비</th>
+                        <th>꽃잎길이</th>
+                        <th>꽃잎너비</th>
+                        <th>예측품종</th>
+                        <th>확인품종</th>
+                        <th>추론시간</th>
+                        <th>확인시간</th>
+                        <th>동작</th>
+                        <th>수정</th>
+                        <th>삭제</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in pagination.items %}
+                        <tr>
+                            <td>{{ result.id }}</td>
+                            {# <td>{{ result.user_id }}</td> #}
+                            <td>{{ result.user.username }}({{ result.user_id }})</td>
+                            <td>{{ result.sepal_length }}</td>
+                            <td>{{ result.sepal_width }}</td>
+                            <td>{{ result.petal_length }}</td>
+                            <td>{{ result.petal_width }}</td>
+                            <td><span class="badge {% if result.predicted_class == 'setosa' %}bg-success{% elif result.predicted_class == 'versicolor' %}bg-warning text-dark{% elif result.predicted_class == 'virginica' %}bg-danger{% else %}bg-secondary{% endif %}">{{ result.predicted_class }}</span></td>
+                            <td>
+                                {% if result.confirmed_class %}
+                                    <span class="badge {% if result.confirmed_class == 'setosa' %}bg-success{% elif result.confirmed_class == 'versicolor' %}bg-warning text-dark{% elif result.confirmed_class == 'virginica' %}bg-danger{% else %}bg-secondary{% endif %}">{{ result.confirmed_class }}</span>
+                                {% else %}
+                                    미확인
+                                {% endif %}
+                            </td>
+                            <td>{{ result.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                {% if result.confirmed_at %}
+                                    {{ result.confirmed_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if not result.confirmed_class and (current_user.is_authenticated and (current_user.id == result.user_id or current_user.is_admin() or current_user.is_expert())) %}
+                                    <form action="{{ url_for('iris.confirm_result', result_id=result.id) }}" method="POST" class="d-inline">
+                                        {{ confirm_form.hidden_tag() }}
+                                        <div class="input-group">
+                                            <select class="form-select form-select-sm" name="confirmed_class">
+                                                <option value="setosa">setosa</option>
+                                                <option value="versicolor">versicolor</option>
+                                                <option value="virginica">virginica</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-primary">확인</button>
+                                        </div>
+                                    </form>
+                                {% else %} <span class="badge bg-secondary">확인 완료</span> {% endif %}
+                            </td>
+                            <td>
+                                {% if result.confirmed_class and (current_user.is_authenticated and (current_user.id == result.user_id or current_user.is_admin() or current_user.is_expert())) %}
+                                    <form action="{{ url_for('iris.edit_confirmed_class', result_id=result.id) }}" method="POST" class="d-inline">
+                                        {{ edit_form.hidden_tag() }}
+                                        <div class="input-group">
+                                            <select class="form-select form-select-sm" name="confirmed_class">
+                                                <option value="setosa" {% if result.confirmed_class == 'setosa' %}selected{% endif %}>setosa</option>
+                                                <option value="versicolor" {% if result.confirmed_class == 'versicolor' %}selected{% endif %}>versicolor</option>
+                                                <option value="virginica" {% if result.confirmed_class == 'virginica' %}selected{% endif %}>virginica</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-warning">수정</button>
+                                        </div>
+                                    </form>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if current_user.is_authenticated and (current_user.id == result.user_id or current_user.is_admin() or current_user.is_expert()) %}
+                                    <form action="{{ url_for('iris.delete_result', result_id=result.id) }}" method="POST" class="d-inline" onsubmit="return confirm('정말로 이 추론 결과를 삭제하시겠습니까?');">
+                                        {{ delete_form.hidden_tag() }}
+                                        <button type="submit" class="btn btn-danger btn-sm">삭제</button>
+                                    </form>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            AI 추론 결과가 없습니다. <a href="{{ url_for('iris.iris_predict') }}" class="alert-link">지금 붓꽃 분류하기</a>
+        </div>
+    {% endif %}
+    {% if pagination and pagination.pages > 1 %}
+        <div class="card-footer">
+            {{ render_pagination(pagination, 'iris.results', filtered_args, 'page') }}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

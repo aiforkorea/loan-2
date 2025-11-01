@@ -1,0 +1,63 @@
+<!-- apps/auth/templates/auth/signup.html -->
+{% extends "base.html" %}
+{% block title %}사용자 신규 등록{% endblock %}
+{% block content %}
+<div class="container py-5"> {# Use container for proper centering and padding #}
+  <div class="row justify-content-center"> {# Center the card horizontally #}
+    <div class="col-lg-6 col-md-8 col-sm-10 col-12"> {# Responsive column sizing #}
+      <div class="card dt-auth-signup shadow-lg"> {# Add shadow for better visual #}
+        <header class="card-header text-center py-3"> {# Header styling #}
+          <h2 class="mb-0">사용자 신규 등록</h2> {# Use h2 for semantic heading #}
+        </header>
+        <div class="card-body p-4"> {# Add padding to card body #}
+          <form action="{{ url_for('auth.signup', next=request.args.get('next')) }}" method="POST" novalidate="novalidate" class="form-signin">
+            {% for message in get_flashed_messages() %}
+            <div class="alert alert-info" role="alert"> {{ message }} </div> {# Use Bootstrap alert for flash messages #}
+            {% endfor %}
+            {{ form.csrf_token }}
+            <div class="mb-3">
+                {{ form.username(class="form-control form-control-lg",placeholder="사용자이름") }} {# Larger fields #}
+                {% if form.username.errors %}
+                    {% for error in form.username.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div> {# Add margin top for spacing #}
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.email(class="form-control form-control-lg", placeholder="이메일") }}
+                {% if form.email.errors %}
+                    {% for error in form.email.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                {{ form.password(class="form-control form-control-lg", placeholder="비밀번호") }}
+                {% if form.password.errors %}
+                    {% for error in form.password.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="mb-4"> {# Increased bottom margin #}
+                {{ form.confirm_password(class="form-control form-control-lg", placeholder="비밀번호 확인") }}
+                {% if form.confirm_password.errors %}
+                    {% for error in form.confirm_password.errors %}
+                        <div class="text-danger mt-1">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="d-grid mb-3"> {# d-grid for full width button #}
+                {{ form.submit(class="btn btn-primary btn-lg") }} {# Larger button #}
+            </div>
+          </form>
+          <div class="text-center mt-3">
+              이미 계정이 있으신가요? <a href="{{ url_for('auth.login') }}">로그인</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

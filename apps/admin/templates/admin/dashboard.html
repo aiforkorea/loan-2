@@ -1,0 +1,75 @@
+<!-- apps/admin/templates/admin/dashboard.html -->
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">관리자 대시보드</h1>
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-info mb-3 h-100">
+            <div class="card-header">총 사용자 수</div>
+            <div class="card-body">
+                <h5 class="card-title display-4">{{ total_users }} 명</h5>
+                <p class="card-text">등록된 모든 사용자 계정 수.</p>
+                <a href="{{ url_for('admin.users') }}" class="btn btn-light btn-sm">사용자 관리</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-success mb-3 h-100">
+            <div class="card-header">총 AI 서비스</div>
+            <div class="card-body">
+                <h5 class="card-title display-4">{{ total_services }} 개</h5>
+                <p class="card-text">플랫폼에 등록된 AI 서비스 수.</p>
+                <a href="#"" class="btn btn-light btn-sm">서비스 관리</a>
+                {# <a href="{{ url_for('admin.services') }}" class="btn btn-light btn-sm">서비스 관리</a> #}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-warning mb-3 h-100">
+            <div class="card-header">구독 대기 중</div>
+            <div class="card-body">
+                <h5 class="card-title display-4">{{ pending_subscriptions }} 건</h5>
+                <p class="card-text">승인 대기 중인 구독 요청 수.</p>
+                <a href="#" class="btn btn-light btn-sm">구독 승인</a>
+                {# <a href="{{ url_for('admin.subscriptions') }}" class="btn btn-light btn-sm">구독 승인</a> #}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-primary mb-3 h-100">
+            <div class="card-header">최근 7일 사용량</div>
+            <div class="card-body">
+                <h5 class="card-title display-4">{{ recent_service_usage }} 회</h5>
+                <p class="card-text">최근 일주일간 서비스 총 사용 횟수.</p>
+                <a href="#" class="btn btn-light btn-sm">통계 차트</a>
+                {# <a href="{{ url_for('admin.usage_charts') }}" class="btn btn-light btn-sm">통계 차트</a> #}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                빠른 링크
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary me-2 mb-2">사용자 관리</a>
+                <a href="{{ url_for('admin.log_list') }}" class="btn btn-outline-secondary me-2 mb-2">사용자 로그 관리</a>
+                <a href="{{ url_for('match.match_manager') }}" class="btn btn-outline-secondary me-2 mb-2">매칭 관리</a>
+                <a href="{{ url_for('match.log_list') }}" class="btn btn-outline-secondary me-2 mb-2">매칭 로그 관리</a>
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary me-2 mb-2">AI 대시보드</a>
+                <a href="#" class="btn btn-outline-secondary me-2 mb-2">새 서비스 추가</a>
+                <a href="#" class="btn btn-outline-secondary me-2 mb-2">구독 요청 관리</a>
+                <a href="#" class="btn btn-outline-secondary me-2 mb-2">사용 통계 차트</a>
+                {# <a href="{{ url_for('admin.services') }}" class="btn btn-outline-secondary me-2 mb-2">AI 서비스 관리</a> #}
+                {# <a href="{{ url_for('admin.new_service') }}" class="btn btn-outline-secondary me-2 mb-2">새 서비스 추가</a> #}
+                {# <a href="{{ url_for('admin.subscriptions') }}" class="btn btn-outline-secondary me-2 mb-2">구독 요청 관리</a> #}
+                {# <a href="{{ url_for('admin.usage_charts') }}" class="btn btn-outline-secondary me-2 mb-2">사용 통계 차트</a> #}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

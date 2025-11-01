@@ -1,0 +1,16 @@
+/* apps/dashboard/static/css/style.css */
+
+/*
+* 여기는 index.html에서 언급된 사용자 지정 스타일을 위한 파일입니다.
+* Bootstrap이 대부분의 스타일을 처리하고 있습니다.
+* 필요에 따라 추가적인 스타일을 여기에 작성할 수 있습니다.
+*/
+
+/* 예시: 카드 배경에 미세한 그림자 추가 */
+.card.shadow-sm {
+    transition: transform 0.2s;
+}
+
+.card.shadow-sm:hover {
+    transform: translateY(-2px);
+}
